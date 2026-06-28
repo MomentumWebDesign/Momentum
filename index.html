@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MOMENTUM — Digital Design Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{--black:#000;--white:#fff;--off:#0a0a0a;--font:'Space Grotesk',system-ui,sans-serif}
+html{scroll-behavior:smooth}
+body{font-family:var(--font);background:var(--black);color:var(--white);cursor:none;overflow-x:hidden}
+a{text-decoration:none;color:inherit}
+
+/* CURSOR */
+#cur{position:fixed;width:8px;height:8px;background:#fff;border-radius:50%;pointer-events:none;z-index:9999;transform:translate(-50%,-50%);transition:width .2s,height .2s;mix-blend-mode:difference}
+#cur-ring{position:fixed;width:38px;height:38px;border:1px solid rgba(255,255,255,.35);border-radius:50%;pointer-events:none;z-index:9998;transform:translate(-50%,-50%);transition:width .3s,height .3s}
+
+/* NAV */
+nav{position:fixed;inset:0 0 auto 0;z-index:100;padding:28px 52px;display:flex;align-items:center;justify-content:space-between;transition:padding .4s,background .4s,border-color .4s;border-bottom:1px solid transparent}
+nav.scrolled{padding:16px 52px;background:rgba(0,0,0,.88);backdrop-filter:blur(14px);border-color:rgba(255,255,255,.07)}
+.nav-logo{font-size:14px;font-weight:700;letter-spacing:.42em;color:#fff}
+.nav-menu{display:flex;list-style:none;gap:40px}
+.nav-menu a{font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:rgba(255,255,255,.55);transition:color .3s}
+.nav-menu a:hover{color:#fff}
+.nav-cta{font-size:12px;letter-spacing:.18em;text-transform:uppercase;padding:11px 28px;border:1px solid rgba(255,255,255,.3);transition:all .3s}
+.nav-cta:hover{background:#fff;color:#000;border-color:#fff}
+
+/* HERO */
+#hero{height:100vh;position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden}
+#hero-canvas{position:absolute;inset:0;width:100%;height:100%}
+.noise{position:absolute;inset:0;z-index:1;pointer-events:none;opacity:.06;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E")}
+.hero-inner{position:relative;z-index:2;text-align:center;padding:0 24px}
+.hero-eyebrow{font-size:11px;letter-spacing:.55em;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:28px;animation:fup .9s ease .3s both}
+.hero-title{font-size:clamp(68px,13.5vw,210px);font-weight:700;line-height:.88;letter-spacing:-.025em;display:inline-block;animation:fup .9s ease .5s both}
+.glitch{position:relative;display:inline-block}
+.glitch::before,.glitch::after{content:attr(data-text);position:absolute;inset:0;animation-duration:6s;animation-iteration-count:infinite}
+.glitch::before{animation-name:gb;clip-path:polygon(0 0,100% 0,100% 33%,0 33%)}
+.glitch::after{animation-name:ga;clip-path:polygon(0 67%,100% 67%,100% 100%,0 100%)}
+@keyframes gb{0%,88%,100%{transform:translate(0);opacity:0}89%{transform:translate(-4px,2px);opacity:.65}91%{transform:translate(4px,-2px);opacity:.65}94%{transform:translate(0);opacity:0}}
+@keyframes ga{0%,88%,100%{transform:translate(0);opacity:0}89%{transform:translate(4px,-2px);opacity:.65}91%{transform:translate(-4px,2px);opacity:.65}94%{transform:translate(0);opacity:0}}
+.hero-sub{font-size:clamp(12px,1.6vw,19px);letter-spacing:.38em;text-transform:uppercase;color:rgba(255,255,255,.45);margin-top:32px;font-weight:300;animation:fup .9s ease .7s both}
+@keyframes fup{from{opacity:0;transform:translateY(28px)}to{opacity:1;transform:translateY(0)}}
+.hero-bottom{position:absolute;bottom:0;left:0;right:0;z-index:2;padding:0 52px 40px;display:flex;justify-content:space-between;align-items:flex-end}
+.hero-meta{font-size:11px;letter-spacing:.3em;text-transform:uppercase;color:rgba(255,255,255,.25)}
+.scroll-hint{display:flex;align-items:center;gap:14px;font-size:11px;letter-spacing:.38em;text-transform:uppercase;color:rgba(255,255,255,.28)}
+.scroll-bar{width:44px;height:1px;background:rgba(255,255,255,.15);position:relative;overflow:hidden}
+.scroll-bar::after{content:'';position:absolute;inset:0;background:rgba(255,255,255,.75);transform:translateX(-100%);animation:sb 2s ease-in-out infinite}
+@keyframes sb{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
+
+/* MARQUEE */
+.mq-wrap{background:#fff;color:#000;overflow:hidden;padding:17px 0;border-top:1px solid #e4e4e4;border-bottom:1px solid #e4e4e4}
+.mq-track{display:flex;width:max-content;animation:mq 28s linear infinite}
+.mq-item{display:flex;align-items:center;gap:52px;padding:0 26px;font-size:12px;letter-spacing:.35em;text-transform:uppercase;font-weight:500;white-space:nowrap}
+.mq-dot{width:4px;height:4px;border-radius:50%;background:#000;flex-shrink:0}
+@keyframes mq{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+
+/* ABOUT */
+#about{padding:160px 80px;display:grid;grid-template-columns:1fr 1fr;gap:100px;align-items:center;background:#000}
+.about-label{font-size:11px;letter-spacing:.5em;text-transform:uppercase;color:rgba(255,255,255,.3);margin-bottom:18px}
+.about-headline{font-size:clamp(32px,3.4vw,54px);font-weight:600;line-height:1.18;letter-spacing:-.025em}
+.about-body{color:rgba(255,255,255,.5);font-size:16px;line-height:1.9;font-weight:300;margin-top:28px}
+.about-body p+p{margin-top:18px}
+.about-link{display:inline-flex;align-items:center;gap:12px;margin-top:44px;font-size:12px;letter-spacing:.22em;text-transform:uppercase;color:#fff;border-bottom:1px solid rgba(255,255,255,.22);padding-bottom:8px;transition:all .35s}
+.about-link:hover{border-color:#fff;gap:22px}
+.about-right{display:flex;align-items:center;justify-content:center}
+.circle-wrap{position:relative;width:290px;height:290px}
+.circle-svg{width:100%;height:100%;animation:spin 22s linear infinite}
+@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+.circle-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:96px;height:96px;border:1px solid rgba(255,255,255,.12);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;letter-spacing:.05em}
+
+/* SERVICES */
+#services{padding:140px 80px;background:#fff;color:#000}
+.svc-header{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:72px}
+.svc-label{font-size:11px;letter-spacing:.5em;text-transform:uppercase;color:rgba(0,0,0,.32);margin-bottom:16px}
+.svc-title{font-size:clamp(38px,5vw,76px);font-weight:700;letter-spacing:-.03em;line-height:.95;color:#000}
+.svc-note{font-size:14px;color:rgba(0,0,0,.45);max-width:260px;line-height:1.75;text-align:right}
+.svc-grid{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid #ddd}
+.svc-card{padding:52px 38px;border-right:1px solid #ddd;position:relative;overflow:hidden;transition:color .4s}
+.svc-card:last-child{border-right:none}
+.svc-card::after{content:'';position:absolute;inset:0;background:#000;transform:translateY(102%);transition:transform .45s cubic-bezier(.77,0,.18,1)}
+.svc-card:hover::after{transform:translateY(0)}
+.svc-card:hover .svc-num,.svc-card:hover .svc-name{color:rgba(255,255,255,.9)}
+.svc-card:hover .svc-desc{color:rgba(255,255,255,.55)}
+.svc-card:hover .svc-icon-svg *{stroke:rgba(255,255,255,.65)}
+.svc-num{font-size:11px;letter-spacing:.3em;color:rgba(0,0,0,.28);position:relative;z-index:1;margin-bottom:52px;transition:color .4s}
+.svc-icon-svg{width:38px;height:38px;margin-bottom:28px;position:relative;z-index:1}
+.svc-name{font-size:19px;font-weight:600;letter-spacing:-.01em;margin-bottom:14px;position:relative;z-index:1;transition:color .4s}
+.svc-desc{font-size:14px;line-height:1.78;color:rgba(0,0,0,.52);position:relative;z-index:1;transition:color .4s}
+
+/* WORK */
+#work{padding:140px 80px;background:#000}
+.work-hd{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:56px}
+.work-label{font-size:11px;letter-spacing:.5em;text-transform:uppercase;color:rgba(255,255,255,.3);margin-bottom:16px}
+.work-title{font-size:clamp(38px,5vw,76px);font-weight:700;letter-spacing:-.03em;line-height:.95}
+.view-all{font-size:12px;letter-spacing:.22em;text-transform:uppercase;color:rgba(255,255,255,.4);border-bottom:1px solid rgba(255,255,255,.18);padding-bottom:4px;transition:all .3s}
+.view-all:hover{color:#fff;border-color:#fff}
+.work-grid{display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:370px 270px;gap:3px}
+.wc{position:relative;overflow:hidden;background:#0a0a0a}
+.wc:first-child{grid-column:span 2}
+.wc-inner{width:100%;height:100%;transition:transform .65s cubic-bezier(.4,0,.2,1)}
+.wc:hover .wc-inner{transform:scale(1.04)}
+.wc-ov{position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.85) 0%,transparent 55%);opacity:0;transition:opacity .4s;display:flex;flex-direction:column;justify-content:flex-end;padding:28px 32px}
+.wc:hover .wc-ov{opacity:1}
+.wc-cat{font-size:11px;letter-spacing:.3em;text-transform:uppercase;color:rgba(255,255,255,.55);margin-bottom:6px}
+.wc-name{font-size:21px;font-weight:600;letter-spacing:-.01em}
+
+/* STATS */
+#stats{background:#fff;color:#000;display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid #e0e0e0;border-bottom:1px solid #e0e0e0}
+.stat{padding:72px 52px;border-right:1px solid #e0e0e0}
+.stat:last-child{border-right:none}
+.stat-num{font-size:clamp(52px,7vw,92px);font-weight:700;letter-spacing:-.04em;line-height:1}
+.stat-suf{font-size:clamp(28px,4vw,52px);opacity:.28}
+.stat-label{font-size:12px;letter-spacing:.25em;text-transform:uppercase;color:rgba(0,0,0,.38);margin-top:14px}
+
+/* PROCESS */
+#process{padding:140px 80px;background:#000}
+.proc-label{font-size:11px;letter-spacing:.5em;text-transform:uppercase;color:rgba(255,255,255,.3);margin-bottom:16px}
+.proc-title{font-size:clamp(38px,5vw,76px);font-weight:700;letter-spacing:-.03em;line-height:.95}
+.proc-step{display:grid;grid-template-columns:72px 1fr 1fr;gap:48px;align-items:start;padding:52px 0;border-bottom:1px solid rgba(255,255,255,.07);transition:padding-left .35s}
+.proc-step:first-of-type{border-top:1px solid rgba(255,255,255,.07);margin-top:80px}
+.proc-step:hover{padding-left:18px}
+.step-num{font-size:11px;letter-spacing:.3em;color:rgba(255,255,255,.22);padding-top:8px}
+.step-title{font-size:28px;font-weight:600;letter-spacing:-.02em}
+.step-desc{font-size:15px;color:rgba(255,255,255,.42);line-height:1.88;font-weight:300}
+
+/* CONTACT */
+#contact{padding:160px 80px;background:#fff;color:#000;text-align:center}
+.ct-label{font-size:11px;letter-spacing:.5em;text-transform:uppercase;color:rgba(0,0,0,.32);margin-bottom:28px}
+.ct-title{font-size:clamp(50px,9vw,136px);font-weight:700;letter-spacing:-.04em;line-height:.92;margin-bottom:64px}
+.ct-form{display:flex;max-width:560px;margin:0 auto;border:1.5px solid #000}
+.ct-input{flex:1;padding:20px 24px;font-family:var(--font);font-size:15px;border:none;outline:none;background:transparent}
+.ct-input::placeholder{color:rgba(0,0,0,.32)}
+.ct-btn{padding:0 32px;background:#000;color:#fff;border:none;font-family:var(--font);font-size:12px;letter-spacing:.2em;text-transform:uppercase;cursor:none;transition:background .3s}
+.ct-btn:hover{background:#1a1a1a}
+.ct-alt{margin-top:36px;font-size:13px;color:rgba(0,0,0,.38);letter-spacing:.04em}
+.ct-email{color:#000;border-bottom:1px solid rgba(0,0,0,.28);transition:border-color .3s}
+.ct-email:hover{border-color:#000}
+
+/* FOOTER */
+footer{padding:52px 80px;background:#000;display:flex;align-items:center;justify-content:space-between;border-top:1px solid rgba(255,255,255,.07)}
+.ft-logo{font-size:14px;font-weight:700;letter-spacing:.42em}
+.ft-links{display:flex;gap:32px;list-style:none}
+.ft-links a{font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.35);transition:color .3s}
+.ft-links a:hover{color:#fff}
+.ft-copy{font-size:11px;color:rgba(255,255,255,.22)}
+
+/* REVEAL */
+.reveal{opacity:0;transform:translateY(32px);transition:opacity .85s ease,transform .85s ease}
+.reveal.in{opacity:1;transform:none}
+.rd1{transition-delay:.1s}.rd2{transition-delay:.2s}.rd3{transition-delay:.3s}
+
+/* RESPONSIVE */
+@media(max-width:1100px){
+  #about{grid-template-columns:1fr;gap:60px}
+  .about-right{display:none}
+  .svc-grid{grid-template-columns:repeat(2,1fr)}
+  .svc-card:nth-child(2){border-right:none}
+  .svc-card:nth-child(3),.svc-card:nth-child(4){border-top:1px solid #ddd}
+  .svc-card:nth-child(4){border-right:none}
+  #stats{grid-template-columns:repeat(2,1fr)}
+  .stat:nth-child(2){border-right:none}
+  .stat:nth-child(3),.stat:nth-child(4){border-top:1px solid #e0e0e0}
+  .stat:nth-child(4){border-right:none}
+  .proc-step{grid-template-columns:60px 1fr}
+  .step-desc{grid-column:2}
+  .work-grid{grid-template-rows:300px 220px}
+}
+@media(max-width:768px){
+  nav{padding:20px 24px}
+  nav.scrolled{padding:14px 24px}
+  .nav-menu{display:none}
+  #about,#services,#work,#process,#contact{padding:80px 24px}
+  footer{padding:44px 24px;flex-direction:column;gap:28px;text-align:center}
+  .svc-header{flex-direction:column;align-items:flex-start;gap:16px}
+  .svc-note{text-align:left}
+  .work-grid{grid-template-columns:1fr;grid-template-rows:auto}
+  .wc:first-child{grid-column:span 1;height:260px}
+  .wc{height:200px}
+  .proc-step{grid-template-columns:1fr;gap:12px}
+  .step-num{display:none}
+  #stats{grid-template-columns:repeat(2,1fr)}
+  .stat{padding:44px 24px}
+}
+</style>
+</head>
+<body>
+
+<div id="cur"></div>
+<div id="cur-ring"></div>
+
+<nav id="nav">
+  <a href="#" class="nav-logo">MOMENTUM</a>
+  <ul class="nav-menu">
+    <li><a href="#about">About</a></li>
+    <li><a href="#services">Services</a></li>
+    <li><a href="#work">Work</a></li>
+    <li><a href="#process">Process</a></li>
+  </ul>
+  <a href="#contact" class="nav-cta">Start a Project</a>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <canvas id="hero-canvas"></canvas>
+  <div class="noise"></div>
+  <div class="hero-inner">
+    <p class="hero-eyebrow">Digital Design Studio &nbsp;·&nbsp; Est. 2024</p>
+    <h1 class="hero-title"><span class="glitch" data-text="MOMENTUM">MOMENTUM</span></h1>
+    <p class="hero-sub">We build what moves you forward</p>
+  </div>
+  <div class="hero-bottom">
+    <span class="hero-meta">©&nbsp;2024</span>
+    <div class="scroll-hint">
+      <div class="scroll-bar"></div>
+      <span>Scroll</span>
+    </div>
+  </div>
+</section>
+
+<!-- MARQUEE -->
+<div class="mq-wrap">
+  <div class="mq-track" id="mq-track"></div>
+</div>
+
+<!-- ABOUT -->
+<section id="about">
+  <div class="reveal">
+    <p class="about-label">About Us</p>
+    <h2 class="about-headline">Design that demands<br>attention.</h2>
+    <div class="about-body">
+      <p>We craft digital experiences with precision and intent — every pixel placed with purpose, every interaction designed to resonate.</p>
+      <p>From brand-new startups to established companies reinventing themselves, we bring the same obsessive commitment to craft that makes the difference between good and unforgettable.</p>
+    </div>
+    <a href="#work" class="about-link">View our work &nbsp;→</a>
+  </div>
+  <div class="about-right reveal rd2">
+    <div class="circle-wrap">
+      <svg class="circle-svg" viewBox="0 0 290 290" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <path id="cp" d="M 145 145 m -110 0 a 110 110 0 1 1 220 0 a 110 110 0 1 1 -220 0"/>
+        </defs>
+        <text font-family="Space Grotesk, sans-serif" font-size="11.5" letter-spacing="4" fill="rgba(255,255,255,0.45)" font-weight="500">
+          <textPath href="#cp">WEB DESIGN · BRAND IDENTITY · DEVELOPMENT · MOTION ·</textPath>
+        </text>
+        <circle cx="145" cy="145" r="110" stroke="rgba(255,255,255,0.07)" stroke-width="1"/>
+        <circle cx="145" cy="145" r="80" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>
+      </svg>
+      <div class="circle-center">M</div>
+    </div>
+  </div>
+</section>
+
+<!-- SERVICES -->
+<section id="services">
+  <div class="svc-header reveal">
+    <div>
+      <p class="svc-label">What We Do</p>
+      <h2 class="svc-title">Our<br>Services</h2>
+    </div>
+    <p class="svc-note">End-to-end digital design for brands ready to make an impact.</p>
+  </div>
+  <div class="svc-grid">
+    <div class="svc-card reveal">
+      <p class="svc-num">01</p>
+      <svg class="svc-icon-svg" viewBox="0 0 40 40" fill="none" stroke="rgba(0,0,0,0.5)" stroke-width="1.2">
+        <rect x="4" y="8" width="32" height="22" rx="2"/>
+        <line x1="4" y1="15" x2="36" y2="15"/>
+        <circle cx="8" cy="11.5" r="1.2" fill="rgba(0,0,0,0.4)"/>
+        <circle cx="12.5" cy="11.5" r="1.2" fill="rgba(0,0,0,0.4)"/>
+        <line x1="10" y1="22" x2="30" y2="22"/>
+        <line x1="10" y1="26" x2="24" y2="26"/>
+        <line x1="14" y1="34" x2="26" y2="34"/>
+        <line x1="20" y1="30" x2="20" y2="34"/>
+      </svg>
+      <p class="svc-name">Web Design</p>
+      <p class="svc-desc">Conversion-focused websites that balance beauty with performance.</p>
+    </div>
+    <div class="svc-card reveal rd1">
+      <p class="svc-num">02</p>
+      <svg class="svc-icon-svg" viewBox="0 0 40 40" fill="none" stroke="rgba(0,0,0,0.5)" stroke-width="1.2">
+        <polygon points="20,5 35,30 5,30"/>
+        <circle cx="20" cy="20" r="6"/>
+      </svg>
+      <p class="svc-name">Brand Identity</p>
+      <p class="svc-desc">Visual identities that are unmistakable, scalable, and built to last.</p>
+    </div>
+    <div class="svc-card reveal rd2">
+      <p class="svc-num">03</p>
+      <svg class="svc-icon-svg" viewBox="0 0 40 40" fill="none" stroke="rgba(0,0,0,0.5)" stroke-width="1.2">
+        <path d="M 6 20 Q 13 8 20 20 Q 27 32 34 20"/>
+        <circle cx="6" cy="20" r="2.5"/>
+        <circle cx="34" cy="20" r="2.5"/>
+        <line x1="20" y1="8" x2="20" y2="32" stroke-opacity=".3"/>
+      </svg>
+      <p class="svc-name">Motion & Animation</p>
+      <p class="svc-desc">Purposeful motion that guides, delights, and elevates every interaction.</p>
+    </div>
+    <div class="svc-card reveal rd3">
+      <p class="svc-num">04</p>
+      <svg class="svc-icon-svg" viewBox="0 0 40 40" fill="none" stroke="rgba(0,0,0,0.5)" stroke-width="1.2">
+        <polyline points="6,14 13,20 6,26"/>
+        <line x1="17" y1="26" x2="29" y2="26"/>
+        <rect x="4" y="6" width="32" height="28" rx="2"/>
+      </svg>
+      <p class="svc-name">Development</p>
+      <p class="svc-desc">Hand-coded, lightning-fast builds with flawless attention to detail.</p>
+    </div>
+  </div>
+</section>
+
+<!-- WORK -->
+<section id="work">
+  <div class="work-hd">
+    <div class="reveal">
+      <p class="work-label">Selected Work</p>
+      <h2 class="work-title">Our<br>Projects</h2>
+    </div>
+    <a href="#contact" class="view-all reveal rd1">View All &nbsp;→</a>
+  </div>
+  <div class="work-grid">
+
+    <!-- APEX: large card with perspective grid -->
+    <div class="wc">
+      <div class="wc-inner">
+        <svg width="100%" height="100%" viewBox="0 0 700 370" preserveAspectRatio="xMidYMid slice" style="display:block">
+          <rect width="700" height="370" fill="#080808"/>
+          <g stroke="white" stroke-width=".6">
+            <!-- Converging lines -->
+            <line x1="350" y1="155" x2="-50" y2="370" stroke-opacity=".1"/>
+            <line x1="350" y1="155" x2="50" y2="370" stroke-opacity=".1"/>
+            <line x1="350" y1="155" x2="150" y2="370" stroke-opacity=".1"/>
+            <line x1="350" y1="155" x2="250" y2="370" stroke-opacity=".1"/>
+            <line x1="350" y1="155" x2="350" y2="370" stroke-opacity=".1"/>
+            <line x1="350" y1="155" x2="450" y2="370" stroke-opacity=".1"/>
+            <line x1="350" y1="155" x2="550" y2="370" stroke-opacity=".1"/>
+            <line x1="350" y1="155" x2="650" y2="370" stroke-opacity=".1"/>
+            <line x1="350" y1="155" x2="750" y2="370" stroke-opacity=".1"/>
+            <!-- Horizon lines -->
+            <line x1="0" y1="190" x2="700" y2="190" stroke-opacity=".07"/>
+            <line x1="0" y1="220" x2="700" y2="220" stroke-opacity=".09"/>
+            <line x1="0" y1="246" x2="700" y2="246" stroke-opacity=".11"/>
+            <line x1="0" y1="268" x2="700" y2="268" stroke-opacity=".13"/>
+            <line x1="0" y1="287" x2="700" y2="287" stroke-opacity=".14"/>
+            <line x1="0" y1="303" x2="700" y2="303" stroke-opacity=".15"/>
+            <line x1="0" y1="317" x2="700" y2="317" stroke-opacity=".16"/>
+            <line x1="0" y1="329" x2="700" y2="329" stroke-opacity=".17"/>
+            <line x1="0" y1="340" x2="700" y2="340" stroke-opacity=".18"/>
+            <line x1="0" y1="350" x2="700" y2="350" stroke-opacity=".19"/>
+            <line x1="0" y1="359" x2="700" y2="359" stroke-opacity=".2"/>
+            <line x1="0" y1="367" x2="700" y2="367" stroke-opacity=".21"/>
+          </g>
+          <circle cx="350" cy="155" r="2.5" fill="white" opacity=".35"/>
+          <text x="350" y="120" text-anchor="middle" fill="white" fill-opacity=".07" font-family="Space Grotesk,sans-serif" font-size="80" font-weight="700" letter-spacing="-3">APEX</text>
+        </svg>
+      </div>
+      <div class="wc-ov">
+        <p class="wc-cat">E-Commerce · Web Design</p>
+        <p class="wc-name">Apex Studios</p>
+      </div>
+    </div>
+
+    <!-- NOIR: overlapping circles -->
+    <div class="wc">
+      <div class="wc-inner">
+        <svg width="100%" height="100%" viewBox="0 0 300 370" preserveAspectRatio="xMidYMid slice" style="display:block">
+          <rect width="300" height="370" fill="#060606"/>
+          <circle cx="125" cy="175" r="95" stroke="white" stroke-width=".8" fill="none" stroke-opacity=".18"/>
+          <circle cx="175" cy="175" r="95" stroke="white" stroke-width=".8" fill="none" stroke-opacity=".18"/>
+          <circle cx="150" cy="210" r="95" stroke="white" stroke-width=".8" fill="none" stroke-opacity=".18"/>
+          <circle cx="150" cy="185" r="22" fill="white" fill-opacity=".04"/>
+          <text x="150" y="50" text-anchor="middle" fill="white" fill-opacity=".06" font-family="Space Grotesk,sans-serif" font-size="42" font-weight="700" letter-spacing="8">NOIR</text>
+        </svg>
+      </div>
+      <div class="wc-ov">
+        <p class="wc-cat">Brand Identity</p>
+        <p class="wc-name">Noir Collective</p>
+      </div>
+    </div>
+
+    <!-- VERTEX: dot grid dashboard -->
+    <div class="wc">
+      <div class="wc-inner">
+        <svg width="100%" height="100%" viewBox="0 0 300 270" preserveAspectRatio="xMidYMid slice" style="display:block">
+          <rect width="300" height="270" fill="#0c0c0c"/>
+          <!-- Dot grid -->
+          <g fill="white" fill-opacity=".12">
+            <circle cx="30" cy="30" r="1.4"/><circle cx="60" cy="30" r="1.4"/><circle cx="90" cy="30" r="1.4"/><circle cx="120" cy="30" r="1.4"/><circle cx="150" cy="30" r="1.4"/><circle cx="180" cy="30" r="1.4"/><circle cx="210" cy="30" r="1.4"/><circle cx="240" cy="30" r="1.4"/><circle cx="270" cy="30" r="1.4"/>
+            <circle cx="30" cy="60" r="1.4"/><circle cx="60" cy="60" r="1.4"/><circle cx="90" cy="60" r="1.4"/><circle cx="120" cy="60" r="1.4"/><circle cx="150" cy="60" r="1.4"/><circle cx="180" cy="60" r="1.4"/><circle cx="210" cy="60" r="1.4"/><circle cx="240" cy="60" r="1.4"/><circle cx="270" cy="60" r="1.4"/>
+            <circle cx="30" cy="90" r="1.4"/><circle cx="60" cy="90" r="1.4"/><circle cx="90" cy="90" r="1.4"/><circle cx="120" cy="90" r="1.4"/><circle cx="150" cy="90" r="1.4"/><circle cx="180" cy="90" r="1.4"/><circle cx="210" cy="90" r="1.4"/><circle cx="240" cy="90" r="1.4"/><circle cx="270" cy="90" r="1.4"/>
+            <circle cx="30" cy="120" r="1.4"/><circle cx="60" cy="120" r="1.4"/><circle cx="90" cy="120" r="1.4"/><circle cx="120" cy="120" r="1.4"/><circle cx="150" cy="120" r="1.4"/><circle cx="180" cy="120" r="1.4"/><circle cx="210" cy="120" r="1.4"/><circle cx="240" cy="120" r="1.4"/><circle cx="270" cy="120" r="1.4"/>
+            <circle cx="30" cy="150" r="1.4"/><circle cx="60" cy="150" r="1.4"/><circle cx="90" cy="150" r="1.4"/><circle cx="120" cy="150" r="1.4"/><circle cx="150" cy="150" r="1.4"/><circle cx="180" cy="150" r="1.4"/><circle cx="210" cy="150" r="1.4"/><circle cx="240" cy="150" r="1.4"/><circle cx="270" cy="150" r="1.4"/>
+            <circle cx="30" cy="180" r="1.4"/><circle cx="60" cy="180" r="1.4"/><circle cx="90" cy="180" r="1.4"/><circle cx="120" cy="180" r="1.4"/><circle cx="150" cy="180" r="1.4"/><circle cx="180" cy="180" r="1.4"/><circle cx="210" cy="180" r="1.4"/><circle cx="240" cy="180" r="1.4"/><circle cx="270" cy="180" r="1.4"/>
+            <circle cx="30" cy="210" r="1.4"/><circle cx="60" cy="210" r="1.4"/><circle cx="90" cy="210" r="1.4"/><circle cx="120" cy="210" r="1.4"/><circle cx="150" cy="210" r="1.4"/><circle cx="180" cy="210" r="1.4"/><circle cx="210" cy="210" r="1.4"/><circle cx="240" cy="210" r="1.4"/><circle cx="270" cy="210" r="1.4"/>
+            <circle cx="30" cy="240" r="1.4"/><circle cx="60" cy="240" r="1.4"/><circle cx="90" cy="240" r="1.4"/><circle cx="120" cy="240" r="1.4"/><circle cx="150" cy="240" r="1.4"/><circle cx="180" cy="240" r="1.4"/><circle cx="210" cy="240" r="1.4"/><circle cx="240" cy="240" r="1.4"/><circle cx="270" cy="240" r="1.4"/>
+          </g>
+          <!-- Highlighted accent dots -->
+          <circle cx="90" cy="90" r="3" fill="white" fill-opacity=".55"/>
+          <circle cx="150" cy="120" r="3" fill="white" fill-opacity=".55"/>
+          <circle cx="210" cy="90" r="3" fill="white" fill-opacity=".55"/>
+          <circle cx="180" cy="150" r="3" fill="white" fill-opacity=".55"/>
+          <!-- Connecting lines -->
+          <line x1="90" y1="90" x2="150" y2="120" stroke="white" stroke-opacity=".2" stroke-width=".8"/>
+          <line x1="150" y1="120" x2="210" y2="90" stroke="white" stroke-opacity=".2" stroke-width=".8"/>
+          <line x1="150" y1="120" x2="180" y2="150" stroke="white" stroke-opacity=".2" stroke-width=".8"/>
+        </svg>
+      </div>
+      <div class="wc-ov">
+        <p class="wc-cat">SaaS · Product Design</p>
+        <p class="wc-name">Vertex Labs</p>
+      </div>
+    </div>
+
+    <!-- SOLARIS: concentric arcs -->
+    <div class="wc">
+      <div class="wc-inner">
+        <svg width="100%" height="100%" viewBox="0 0 300 270" preserveAspectRatio="xMidYMid slice" style="display:block">
+          <rect width="300" height="270" fill="#040404"/>
+          <g stroke="white" fill="none" stroke-width=".8">
+            <path d="M 150 280 m -20 0 a 20 20 0 0 1 40 0" stroke-opacity=".5"/>
+            <path d="M 150 280 m -50 0 a 50 50 0 0 1 100 0" stroke-opacity=".38"/>
+            <path d="M 150 280 m -80 0 a 80 80 0 0 1 160 0" stroke-opacity=".28"/>
+            <path d="M 150 280 m -110 0 a 110 110 0 0 1 220 0" stroke-opacity=".2"/>
+            <path d="M 150 280 m -140 0 a 140 140 0 0 1 280 0" stroke-opacity=".14"/>
+            <path d="M 150 280 m -170 0 a 170 170 0 0 1 340 0" stroke-opacity=".1"/>
+            <path d="M 150 280 m -200 0 a 200 200 0 0 1 400 0" stroke-opacity=".07"/>
+            <path d="M 150 280 m -240 0 a 240 240 0 0 1 480 0" stroke-opacity=".05"/>
+          </g>
+          <circle cx="150" cy="280" r="4" fill="white" fill-opacity=".5"/>
+          <text x="150" y="230" text-anchor="middle" fill="white" fill-opacity=".05" font-family="Space Grotesk,sans-serif" font-size="36" font-weight="700" letter-spacing="6">SOLARIS</text>
+        </svg>
+      </div>
+      <div class="wc-ov">
+        <p class="wc-cat">Mobile App · UI/UX</p>
+        <p class="wc-name">Solaris</p>
+      </div>
+    </div>
+
+    <!-- KAIROS: typographic art -->
+    <div class="wc">
+      <div class="wc-inner">
+        <svg width="100%" height="100%" viewBox="0 0 300 270" preserveAspectRatio="xMidYMid slice" style="display:block">
+          <rect width="300" height="270" fill="#090909"/>
+          <text x="50%" y="58%" dominant-baseline="middle" text-anchor="middle" fill="white" fill-opacity=".08" font-family="Space Grotesk,sans-serif" font-size="180" font-weight="700" letter-spacing="-10">05</text>
+          <line x1="32" y1="40" x2="270" y2="40" stroke="white" stroke-opacity=".07" stroke-width=".8"/>
+          <line x1="32" y1="230" x2="270" y2="230" stroke="white" stroke-opacity=".07" stroke-width=".8"/>
+          <text x="32" y="58" fill="white" fill-opacity=".35" font-family="Space Grotesk,sans-serif" font-size="10" letter-spacing="4" font-weight="500">KAIROS</text>
+          <text x="32" y="72" fill="white" fill-opacity=".18" font-family="Space Grotesk,sans-serif" font-size="9" letter-spacing="2">PORTFOLIO SITE</text>
+        </svg>
+      </div>
+      <div class="wc-ov">
+        <p class="wc-cat">Portfolio · Web Design</p>
+        <p class="wc-name">Kairos Studio</p>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- STATS -->
+<section id="stats">
+  <div class="stat reveal">
+    <div class="stat-num"><span class="counter" data-target="120">0</span><span class="stat-suf">+</span></div>
+    <p class="stat-label">Projects Delivered</p>
+  </div>
+  <div class="stat reveal rd1">
+    <div class="stat-num"><span class="counter" data-target="48">0</span><span class="stat-suf">h</span></div>
+    <p class="stat-label">Avg. Turnaround</p>
+  </div>
+  <div class="stat reveal rd2">
+    <div class="stat-num"><span class="counter" data-target="98">0</span><span class="stat-suf">%</span></div>
+    <p class="stat-label">Client Satisfaction</p>
+  </div>
+  <div class="stat reveal rd3">
+    <div class="stat-num"><span class="counter" data-target="12">0</span><span class="stat-suf">x</span></div>
+    <p class="stat-label">Avg. ROI Reported</p>
+  </div>
+</section>
+
+<!-- PROCESS -->
+<section id="process">
+  <div class="reveal">
+    <p class="proc-label">How We Work</p>
+    <h2 class="proc-title">The<br>Process</h2>
+  </div>
+  <div class="proc-step reveal">
+    <span class="step-num">01</span>
+    <p class="step-title">Discovery</p>
+    <p class="step-desc">We dig deep into your brand, your audience, and your goals. No templates — every strategy starts from zero.</p>
+  </div>
+  <div class="proc-step reveal">
+    <span class="step-num">02</span>
+    <p class="step-title">Design</p>
+    <p class="step-desc">Concepts built around what works. We explore, refine, and obsess until the design feels inevitable.</p>
+  </div>
+  <div class="proc-step reveal">
+    <span class="step-num">03</span>
+    <p class="step-title">Build</p>
+    <p class="step-desc">Pixel-perfect development with clean code, fast load times, and interactions that feel alive.</p>
+  </div>
+  <div class="proc-step reveal">
+    <span class="step-num">04</span>
+    <p class="step-title">Launch & Evolve</p>
+    <p class="step-desc">We ship with care, monitor with intention, and stay on hand to keep momentum going long after launch.</p>
+  </div>
+</section>
+
+<!-- CONTACT -->
+<section id="contact">
+  <p class="ct-label">Get In Touch</p>
+  <h2 class="ct-title reveal">Let's Build<br>Something.</h2>
+  <form class="ct-form reveal rd1" onsubmit="return false">
+    <input class="ct-input" type="email" placeholder="your@email.com">
+    <button class="ct-btn" type="submit">Send &nbsp;→</button>
+  </form>
+  <p class="ct-alt reveal rd2">Or reach us directly at <a href="mailto:hello@momentum.studio" class="ct-email">hello@momentum.studio</a></p>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <span class="ft-logo">MOMENTUM</span>
+  <ul class="ft-links">
+    <li><a href="#about">About</a></li>
+    <li><a href="#services">Services</a></li>
+    <li><a href="#work">Work</a></li>
+    <li><a href="#contact">Contact</a></li>
+  </ul>
+  <span class="ft-copy">© 2024 Momentum Studio</span>
+</footer>
+
+<script>
+// ---- CURSOR ----
+const cur = document.getElementById('cur');
+const ring = document.getElementById('cur-ring');
+let mx=0,my=0,rx=0,ry=0;
+document.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;cur.style.left=mx+'px';cur.style.top=my+'px'});
+(function tick(){rx+=(mx-rx)*.12;ry+=(my-ry)*.12;ring.style.left=rx+'px';ring.style.top=ry+'px';requestAnimationFrame(tick)})();
+document.querySelectorAll('a,button').forEach(el=>{
+  el.addEventListener('mouseenter',()=>{cur.style.width='14px';cur.style.height='14px';ring.style.width='58px';ring.style.height='58px'});
+  el.addEventListener('mouseleave',()=>{cur.style.width='8px';cur.style.height='8px';ring.style.width='38px';ring.style.height='38px'});
+});
+
+// ---- NAV ----
+const nav=document.getElementById('nav');
+window.addEventListener('scroll',()=>nav.classList.toggle('scrolled',scrollY>60));
+
+// ---- MARQUEE ----
+const items=['Web Design','Brand Identity','Motion Design','Development','UI / UX','Interaction Design','Visual Strategy','Digital Experiences'];
+const track=document.getElementById('mq-track');
+const full=[...items,...items].map(t=>`<span class="mq-item">${t}<span class="mq-dot"></span></span>`).join('');
+track.innerHTML=full+full;
+
+// ---- HERO CANVAS ----
+(function(){
+  const canvas=document.getElementById('hero-canvas');
+  const ctx=canvas.getContext('2d');
+  let W,H;
+  function resize(){W=canvas.width=window.innerWidth;H=canvas.height=window.innerHeight}
+  resize();
+  window.addEventListener('resize',resize);
+
+  // Speed lines
+  class SLine{
+    constructor(){this.reset(true)}
+    reset(rand){
+      this.y=rand?Math.random()*H:Math.random()*H;
+      this.x=rand?Math.random()*W:-Math.random()*300;
+      this.len=80+Math.random()*320;
+      this.spd=1.5+Math.random()*5.5;
+      this.op=0.04+Math.random()*0.18;
+      this.w=0.2+Math.random()*0.9;
+    }
+    update(){
+      this.x+=this.spd;
+      if(this.x>W+this.len){this.reset(false)}
+    }
+    draw(){
+      const g=ctx.createLinearGradient(this.x,0,this.x+this.len,0);
+      g.addColorStop(0,'rgba(255,255,255,0)');
+      g.addColorStop(.4,`rgba(255,255,255,${this.op})`);
+      g.addColorStop(1,'rgba(255,255,255,0)');
+      ctx.beginPath();ctx.moveTo(this.x,this.y);ctx.lineTo(this.x+this.len,this.y);
+      ctx.strokeStyle=g;ctx.lineWidth=this.w;ctx.stroke();
+    }
+  }
+  const lines=Array.from({length:100},()=>new SLine());
+
+  // Dot grid
+  let t=0;
+  function drawDots(){
+    const sp=55;
+    for(let x=0;x<=W+sp;x+=sp){
+      for(let y=0;y<=H+sp;y+=sp){
+        const dx=x+Math.sin(t*.5+y*.018)*9;
+        const dy=y+Math.cos(t*.4+x*.018)*9;
+        const dist=Math.hypot(dx-W/2,dy-H/2);
+        const op=Math.max(0,.14-dist/(W*1.2));
+        ctx.beginPath();ctx.arc(dx,dy,1.1,0,Math.PI*2);
+        ctx.fillStyle=`rgba(255,255,255,${op})`;ctx.fill();
+      }
+    }
+  }
+
+  function animate(){
+    ctx.clearRect(0,0,W,H);
+    drawDots();
+    lines.forEach(l=>{l.update();l.draw()});
+    t+=0.018;
+    requestAnimationFrame(animate);
+  }
+  animate();
+})();
+
+// ---- SCROLL REVEAL ----
+const obs=new IntersectionObserver(entries=>{
+  entries.forEach(e=>{if(e.isIntersecting)e.target.classList.add('in')});
+},{threshold:.12});
+document.querySelectorAll('.reveal').forEach(el=>obs.observe(el));
+
+// ---- COUNTERS ----
+const cObs=new IntersectionObserver(entries=>{
+  entries.forEach(e=>{
+    if(e.isIntersecting){
+      const el=e.target,target=+el.dataset.target,dur=1800,start=performance.now();
+      (function tick(now){
+        const p=Math.min((now-start)/dur,1);
+        const ease=1-Math.pow(1-p,3);
+        el.textContent=Math.round(ease*target);
+        if(p<1)requestAnimationFrame(tick);
+      })(start);
+      cObs.unobserve(el);
+    }
+  });
+},{threshold:.5});
+document.querySelectorAll('.counter').forEach(el=>cObs.observe(el));
+</script>
+</body>
+</html>
